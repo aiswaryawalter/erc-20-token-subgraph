@@ -2,9 +2,13 @@ import { BigInt } from "@graphprotocol/graph-ts"
 import { PushToken, Transfer, Approval } from "../generated/PushToken/PushToken"
 import { User, UserCounter, TransferCounter } from "../generated/schema"
 
+let ZERO_BI = BigInt.fromI32(0)
+let ONE_BI = BigInt.fromI32(1)
+
 export function handleTransfer(event: Transfer): void {
   let contract = PushToken.bind(event.address)
-  // let decimals = BigInt.fromString(contract.decimals.toString())
+  let decimals = BigInt.fromString(contract.decimals().toString())
+  let power = exponentToBigInt(decimals)
   let day = (event.block.timestamp.div(BigInt.fromI32(60 * 60 * 24)))
 
   let userFrom = User.load(event.params.from.toHex())
@@ -55,6 +59,13 @@ function newUser(id: string, address: string): User {
   user.balance = BigInt.fromI32(0)
   user.transactionCount = 0
   return user
+}
+function exponentToBigInt(decimals: BigInt): BigInt {
+  let bd = BigInt.fromString('1')
+  for (let i = ZERO_BI; i.lt(decimals as BigInt); i = i.plus(ONE_BI)) {
+    bd = bd.times(BigInt.fromString('10'))
+  }
+  return bd
 }
 
 export function handleApproval(event: Approval): void {}
